@@ -20,7 +20,7 @@ The script clones the following repository:
 To download, make the script executable, and run it, use the following command:
 
 ```bash
-wget https://yourserver.com/initial_setup.sh -O initial_setup.sh && chmod +x initial_setup.sh && sudo ./initial_setup.sh
+wget https://raw.githubusercontent.com/ngroegli/linux-initial-base-setup/refs/heads/main/initial_setup.sh -O initial_setup.sh && chmod +x initial_setup.sh && sudo ./initial_setup.sh
 ```
 
 Ensure you have the necessary permissions to run the script and authenticate with GitHub when prompted.
