@@ -4,17 +4,60 @@ set -e  # Exit on error
 
 # Global variables
 GITHUB_USERNAME="ngroegli"
-ANSIBLE_REPO_NAME="ansible-infrastructure"
+REPO_NAME="ansible-infrastructure"
 GIT_DIR="$HOME/git"
-REPO_URL="git@github.com:$GITHUB_USERNAME/$ANSIBLE_REPO_NAME.git"
-DEST_DIR="$GIT_DIR/$ANSIBLE_REPO_NAME"
+REPO_URL="git@github.com:$GITHUB_USERNAME/$REPO_NAME.git"
+DEST_DIR="$GIT_DIR/$REPO_NAME"
 
-echo "Starting initial setup..."
+# Detect OS and package manager
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    OS=$ID
+else
+    echo "Unsupported OS"
+    exit 1
+fi
 
-# Update package lists
-echo "Updating package lists..."
-sudo apt update -y
-sudo apt upgrade -y
+update_packages() {
+    case "$OS" in
+        ubuntu|debian|raspbian)
+            sudo apt update -y && sudo apt upgrade -y
+            ;;
+        fedora|centos|rhel)
+            sudo dnf update -y
+            ;;
+        arch|manjaro)
+            sudo pacman -Syu --noconfirm
+            ;;
+        opensuse*)
+            sudo zypper refresh && sudo zypper update -y
+            ;;
+        *)
+            echo "Unsupported OS: $OS"
+            exit 1
+            ;;
+    esac
+}
+
+install_package() {
+    local package=$1
+    case "$OS" in
+        ubuntu|debian|raspbian)
+            sudo apt install -y "$package"
+            ;;
+        fedora|centos|rhel)
+            sudo dnf install -y "$package"
+            ;;
+        arch|manjaro)
+            sudo pacman -S --noconfirm "$package"
+            ;;
+        opensuse*)
+            sudo zypper install -y "$package"
+            ;;
+    esac
+}
+
+update_packages
 
 # Function to check if a command exists
 command_exists() {
@@ -24,35 +67,50 @@ command_exists() {
 # Install or update Git
 if command_exists git; then
     echo "Git is already installed. Updating..."
-    sudo apt upgrade -y git
 else
     echo "Installing Git..."
-    sudo apt install -y git
+    install_package git
 fi
 
 # Install or update GitHub CLI (gh)
 if command_exists gh; then
     echo "GitHub CLI (gh) is already installed. Updating..."
-    sudo apt upgrade -y gh
 else
     echo "Installing GitHub CLI (gh)..."
-    type -p curl >/dev/null || sudo apt install -y curl
-    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-    sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
-    echo "deb [signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-    sudo apt update -y
-    sudo apt install -y gh
+    install_package gh
 fi
 
-# Install or update Docker Desktop
+# Install or update Docker Engine
 if command_exists docker; then
     echo "Docker is already installed. Updating..."
-    sudo apt upgrade -y docker-desktop
 else
-    echo "Installing Docker Desktop..."
-    curl -fsSL https://desktop.docker.com/linux/main/amd64/docker-desktop-$(uname -m).deb -o docker-desktop.deb
-    sudo apt install -y ./docker-desktop.deb
-    rm docker-desktop.deb
+    echo "Installing Docker Engine..."
+    case "$OS" in
+        ubuntu|debian|raspbian)
+            install_package apt-transport-https
+            install_package ca-certificates
+            install_package curl
+            install_package gnupg-agent
+            install_package software-properties-common
+            curl -fsSL https://download.docker.com/linux/$OS/gpg | sudo apt-key add -
+            sudo add-apt-repository "deb [arch=$(dpkg --print-architecture)] https://download.docker.com/linux/$OS $(lsb_release -cs) stable"
+            sudo apt update -y
+            install_package docker-ce docker-ce-cli containerd.io
+            ;;
+        fedora|centos|rhel)
+            install_package dnf-plugins-core
+            sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+            sudo dnf install -y docker-ce docker-ce-cli containerd.io
+            ;;
+        arch|manjaro)
+            install_package docker
+            ;;
+        opensuse*)
+            sudo zypper addrepo https://download.opensuse.org/repositories/Virtualization:containers/openSUSE_Tumbleweed/Virtualization:containers.repo
+            sudo zypper refresh
+            install_package docker
+            ;;
+    esac
 fi
 
 # Authenticate with GitHub
@@ -76,3 +134,4 @@ else
 fi
 
 echo "Setup complete. All tools are installed, authenticated, and the repository is cloned."
+

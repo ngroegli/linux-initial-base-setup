@@ -3,7 +3,7 @@
 ## Purpose
 This script automates the installation and setup of essential tools for deployment, including:
 
-- **Docker Desktop** for containerized development
+- **Docker Engine** for containerized development
 - **Git** for version control
 - **GitHub CLI (gh)** for interacting with GitHub
 - **Authentication with GitHub** to access private repositories
@@ -16,11 +16,24 @@ The script clones the following repository:
 
 - **GitHub Repository:** `git@github.com:ngroegli/ansible-infrastructure.git`
 
+## Supported Operating Systems
+This script supports the following Linux distributions:
+
+- Ubuntu
+- Debian
+- Raspberry Pi OS
+- Fedora
+- CentOS
+- RHEL
+- Arch Linux
+- Manjaro
+- openSUSE
+
 ## Installation
 To download, make the script executable, and run it, use the following command:
 
 ```bash
-wget https://raw.githubusercontent.com/ngroegli/linux-initial-base-setup/refs/heads/main/initial_setup.sh -O initial_setup.sh && chmod +x initial_setup.sh && sudo ./initial_setup.sh
+wget https://raw.githubusercontent.com/ngroegli/linux-initial-base-setup/main/initial_setup.sh -O initial_setup.sh && chmod +x initial_setup.sh && sudo ./initial_setup.sh
 ```
 
 Ensure you have the necessary permissions to run the script and authenticate with GitHub when prompted.
@@ -33,8 +46,9 @@ Ensure you have the necessary permissions to run the script and authenticate wit
 ## Troubleshooting
 If you encounter any issues, check the script output for error messages and ensure you have an active internet connection.
 
-For more details, visit the GitHub documentation for:
-- [Docker Desktop](https://docs.docker.com/desktop/)
+For more details, visit the official documentation for:
+- [Docker Engine](https://docs.docker.com/engine/install/)
 - [GitHub CLI](https://cli.github.com/)
 - [Git](https://git-scm.com/doc)
+- [Private Github Repository for Ansible](https://github.com/ngroegli/ansible-infrastructure)
 
