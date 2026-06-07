@@ -5,8 +5,7 @@ set -e  # Exit on error
 # Global variables
 GITHUB_USERNAME="ngroegli"
 REPO_NAME="ansible-infrastructure"
-GIT_DIR="$HOME/git"
-REPO_URL="git@github.com:$GITHUB_USERNAME/$REPO_NAME.git"
+GIT_DIR="$HOME/Git"
 DEST_DIR="$GIT_DIR/$REPO_NAME"
 
 # Detect OS and package manager
@@ -57,6 +56,28 @@ install_package() {
     esac
 }
 
+configure_docker_repo() {
+    case "$OS" in
+        ubuntu|debian|raspbian)
+            sudo mkdir -p /etc/apt/keyrings
+
+            if [ ! -f /etc/apt/keyrings/docker.gpg ]; then
+                curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+                    | sudo gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg
+                sudo chmod a+r /etc/apt/keyrings/docker.gpg
+            fi
+
+            if ! grep -Rqs "download.docker.com/linux/$OS" /etc/apt/sources.list.d; then
+                sudo tee /etc/apt/sources.list.d/docker.list >/dev/null <<EOF
+deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$OS $(lsb_release -cs) stable
+EOF
+            fi
+            ;;
+    esac
+}
+
+configure_docker_repo
+
 update_packages
 
 # Function to check if a command exists
@@ -92,8 +113,7 @@ else
             install_package curl
             install_package gnupg-agent
             install_package software-properties-common
-            curl -fsSL https://download.docker.com/linux/$OS/gpg | sudo apt-key add -
-            sudo add-apt-repository "deb [arch=$(dpkg --print-architecture)] https://download.docker.com/linux/$OS $(lsb_release -cs) stable"
+            configure_docker_repo
             sudo apt update -y
             install_package docker-ce docker-ce-cli containerd.io
             ;;
@@ -130,8 +150,7 @@ if [ -d "$DEST_DIR" ]; then
     cd "$DEST_DIR" && git pull
 else
     echo "Cloning private repository..."
-    git clone "$REPO_URL" "$DEST_DIR"
+    gh repo clone "$GITHUB_USERNAME/$REPO_NAME" "$DEST_DIR"
 fi
 
 echo "Setup complete. All tools are installed, authenticated, and the repository is cloned."
-
