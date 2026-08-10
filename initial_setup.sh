@@ -59,19 +59,56 @@ install_package() {
 configure_docker_repo() {
     case "$OS" in
         ubuntu|debian|raspbian)
-            sudo mkdir -p /etc/apt/keyrings
+            echo "Configuring Docker repository..."
 
-            if [ ! -f /etc/apt/keyrings/docker.gpg ]; then
-                curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
-                    | sudo gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg
-                sudo chmod a+r /etc/apt/keyrings/docker.gpg
-            fi
+            # Docker's repository setup requires these packages first.
+            sudo apt-get update
+            sudo apt-get install -y ca-certificates curl
 
-            if ! grep -Rqs "download.docker.com/linux/$OS" /etc/apt/sources.list.d; then
-                sudo tee /etc/apt/sources.list.d/docker.list >/dev/null <<EOF
-deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$OS $(lsb_release -cs) stable
+            sudo install -m 0755 -d /etc/apt/keyrings
+
+            # Install Docker's official GPG key.
+            sudo curl -fsSL \
+                https://download.docker.com/linux/ubuntu/gpg \
+                -o /etc/apt/keyrings/docker.asc
+
+            sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+            # Ubuntu uses its Ubuntu codename, e.g. resolute.
+            local codename
+            codename="${UBUNTU_CODENAME:-$VERSION_CODENAME}"
+
+            # Configure Docker's APT repository.
+            sudo tee /etc/apt/sources.list.d/docker.sources > /dev/null <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: ${codename}
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
 EOF
-            fi
+            ;;
+
+        fedora|centos|rhel)
+            sudo dnf install -y dnf-plugins-core
+            sudo dnf config-manager \
+                --add-repo \
+                https://download.docker.com/linux/fedora/docker-ce.repo
+            ;;
+
+        arch|manjaro)
+            # Docker is available directly from the Arch repositories.
+            ;;
+
+        opensuse*)
+            sudo zypper addrepo \
+                https://download.opensuse.org/repositories/Virtualization:containers/openSUSE_Tumbleweed/Virtualization:containers.repo
+            sudo zypper refresh
+            ;;
+
+        *)
+            echo "Unsupported OS: $OS"
+            exit 1
             ;;
     esac
 }
