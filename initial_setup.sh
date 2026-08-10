@@ -175,7 +175,7 @@ if gh auth status &>/dev/null; then
     echo "Already authenticated with GitHub."
 else
     echo "Authenticating with GitHub..."
-    gh auth login
+    gh auth login --no-sandbox
 fi
 
 # Create a 'git' directory if it doesn't exist
