@@ -33,15 +33,15 @@ This script supports the following Linux distributions:
 To download, make the script executable, and run it, use the following command:
 
 ```bash
-wget https://raw.githubusercontent.com/ngroegli/linux-initial-base-setup/main/initial_setup.sh -O initial_setup.sh && chmod +x initial_setup.sh && sudo ./initial_setup.sh
+wget https://raw.githubusercontent.com/ngroegli/linux-initial-base-setup/main/initial_setup.sh -O initial_setup.sh && chmod +x initial_setup.sh && ./initial_setup.sh
 ```
 
-Ensure you have the necessary permissions to run the script and authenticate with GitHub when prompted.
+Ensure your user can run `sudo` for package installation steps, and authenticate with GitHub when prompted.
 
 ## Notes
 - The script will check for existing installations and update them if necessary.
 - If GitHub authentication is required, you will be prompted to log in.
-- The repository will be cloned into `~/git/ansible-infrastructure`.
+- The repository will be cloned into `~/Git/ansible-infrastructure`.
 
 ## Troubleshooting
 If you encounter any issues, check the script output for error messages and ensure you have an active internet connection.
